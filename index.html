@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fox Clicker!</title>
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: #f0f0f0;
+    overflow-x: hidden;
+  }
+
+#counter {
+font-size: 2em;
+margin: 10px 0;
+}
+
+#game-area {
+display: flex;
+width: 100%;
+justify-content: center;
+align-items: flex-start;
+gap: 20px;
+flex-wrap: wrap;
+position: relative;
+}
+
+#fox-container {
+position: relative;
+cursor: pointer;
+}
+
+#fox {
+max-width: 200px;
+transition: transform 0.1s ease;
+user-select: none;
+}
+
+.mini-fox {
+position: absolute;
+width: 50px;
+opacity: 1;
+pointer-events: none;
+transition: transform 0.7s ease, opacity 0.7s ease;
+}
+
+#upgrades {
+margin-top: 20px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+width: 90%;
+max-width: 400px;
+}
+
+.upgrade-btn {
+padding: 10px;
+font-size: 1em;
+cursor: pointer;
+background-color: #ffcc66;
+border: 2px solid #ffa500;
+border-radius: 8px;
+text-align: center;
+}
+
+#background-upgrade {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-repeat: repeat;
+z-index: -1;
+}
+
+#fox-video {
+margin-top: 20px;
+width: 100%;
+max-width: 560px;
+}
+
+#fox-orbit img {
+position: fixed;
+width: 80px;
+pointer-events: none;
+} </style>
+
+</head>
+<body>
+
+<div id="counter">Foxes: 0</div>
+<div id="game-area">
+  <div id="fox-container">
+    <img id="fox" src="https://pngimg.com/d/fox_PNG23137.png" alt="Fox">
+  </div>
+</div>
+
+<div id="upgrades">
+  <div class="upgrade-btn" id="fox-noise-btn">Fox Noises (20 foxes) +1 per click</div>
+  <div class="upgrade-btn" id="fox-background-btn">Fox Background (50 foxes) + more per click</div>
+  <div class="upgrade-btn" id="fox-video-btn">Fox Video (100 foxes) auto-foxes</div>
+  <div class="upgrade-btn" id="fox-orbit-btn">Fox Orbit (200 foxes) + more per click</div>
+</div>
+
+<div id="background-upgrade"></div>
+<div id="fox-video"></div>
+<div id="fox-orbit"></div>
+
+<script>
+  let foxes = 0;
+  let perClick = 1;
+  let autoFoxes = 0;
+  let foxNoisesUnlocked = false;
+  let foxOrbitActive = false;
+
+  const counter = document.getElementById('counter');
+  const fox = document.getElementById('fox');
+  const foxContainer = document.getElementById('fox-container');
+  const backgroundUpgrade = document.getElementById('background-upgrade');
+  const foxVideoDiv = document.getElementById('fox-video');
+  const foxOrbitDiv = document.getElementById('fox-orbit');
+
+  // Click animation and mini foxes
+  foxContainer.addEventListener('click', () => {
+    fox.style.transform = 'scale(1.1)';
+    setTimeout(() => fox.style.transform = 'scale(1)', 100);
+    addFoxes(perClick);
+    spawnMiniFoxes();
+    playRandomFoxNoise();
+  });
+
+  function addFoxes(amount) {
+    foxes += amount;
+    counter.innerText = `Foxes: ${foxes}`;
+  }
+
+  function spawnMiniFoxes() {
+    for(let i=0; i<5; i++){
+      const mini = document.createElement('img');
+      mini.src = fox.src;
+      mini.className = 'mini-fox';
+      mini.style.left = '50%';
+      mini.style.top = '50%';
+      const angle = Math.random() * 2 * Math.PI;
+      const dist = 100 + Math.random()*50;
+      foxContainer.appendChild(mini);
+      setTimeout(() => {
+        mini.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+        mini.style.opacity = 0;
+      }, 10);
+      setTimeout(() => mini.remove(), 700);
+    }
+  }
+
+  // Upgrades
+  function purchaseUpgrade(btn, cost, callback) {
+    if(foxes >= cost) {
+      foxes -= cost;
+      counter.innerText = `Foxes: ${foxes}`;
+      callback();
+      btn.style.display = 'none';
+    }
+  }
+
+  document.getElementById('fox-noise-btn').addEventListener('click', () => {
+    purchaseUpgrade(document.getElementById('fox-noise-btn'), 20, () => {
+      foxNoisesUnlocked = true;
+      perClick += 1;
+    });
+  });
+
+  document.getElementById('fox-background-btn').addEventListener('click', () => {
+    purchaseUpgrade(document.getElementById('fox-background-btn'), 50, () => {
+      perClick += 2;
+      backgroundUpgrade.style.backgroundImage = 'url(https://m.media-amazon.com/images/I/6180yDmpSSL.jpg)';
+    });
+  });
+
+  document.getElementById('fox-video-btn').addEventListener('click', () => {
+    purchaseUpgrade(document.getElementById('fox-video-btn'), 100, () => {
+      autoFoxes += 1;
+foxVideoDiv.innerHTML = `<iframe width="829" height="829" 
+  src="https://www.youtube.com/embed/ZC_sncOLORw?autoplay=1&playlist=ZC_sncOLORw&loop=1" 
+  title="fox sniffing camera with eurodance" frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  allowfullscreen>
+</iframe>`;
+;
+    });
+  });
+
+  document.getElementById('fox-orbit-btn').addEventListener('click', () => {
+    purchaseUpgrade(document.getElementById('fox-orbit-btn'), 200, () => {
+      perClick += 3;
+      foxOrbitActive = true;
+      spawnOrbitingFoxes();
+    });
+  });
+
+  function spawnOrbitingFoxes() {
+    const orbitImgs = [];
+    for(let i=0; i<8; i++){
+      const img = document.createElement('img');
+      img.src = 'https://wildlifeaid.org.uk/wp-content/uploads/2024/12/fox-head-2.webp';
+      foxOrbitDiv.appendChild(img);
+      orbitImgs.push({img, angle: (i/8)*2*Math.PI});
+    }
+
+    function animateOrbit() {
+      orbitImgs.forEach(obj => {
+        obj.angle += 0.02;
+        const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 50;
+        obj.img.style.left = `${window.innerWidth/2 + radius * Math.cos(obj.angle) - 40}px`;
+        obj.img.style.top = `${window.innerHeight/2 + radius * Math.sin(obj.angle) - 40}px`;
+      });
+      if(foxOrbitActive) requestAnimationFrame(animateOrbit);
+    }
+    animateOrbit();
+  }
+
+  // Auto-foxes
+  setInterval(() => {
+    if(autoFoxes > 0){
+      addFoxes(autoFoxes);
+    }
+  }, 1000);
+
+  // Fox noises
+  function playRandomFoxNoise(){
+    if(foxNoisesUnlocked){
+      const chance = Math.random();
+      if(chance < 0.3){
+        const sound = new Audio(`/foxnoise${Math.floor(Math.random()*3)+1}.mp3`);
+        sound.play();
+      }
+    }
+  }
+
+</script>
+
+</body>
+</html>
