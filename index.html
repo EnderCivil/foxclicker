@@ -237,7 +237,7 @@ foxVideoDiv.innerHTML = `<iframe width="829" height="829"
     if(foxNoisesUnlocked){
       const chance = Math.random();
       if(chance < 0.3){
-        const sound = new Audio(`/foxnoise${Math.floor(Math.random()*3)+1}.mp3`);
+        const sound = new Audio(`/foxnoise${Math.floor(Math.random()*1)+0}.mp3`);
         sound.play();
       }
     }
